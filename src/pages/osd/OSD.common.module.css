@@ -1,0 +1,42 @@
+
+
+.canvases {
+  position: relative;
+}
+
+.canvas {
+  position: fixed;
+  border: 3px solid var(--secondary-color);
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.infoBar {
+  display: flex;
+  flex-direction: column;
+}
+
+.infoBarPointsContainer {
+  overflow: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex-grow: 1;
+}
+
+.infoBarItem {
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
+  font-size: 12px;
+  margin: 3px;
+  padding: 3px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.controlBar {
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  align-items: stretch;
+  gap: 5px;
+}
