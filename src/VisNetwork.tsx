@@ -1,45 +1,23 @@
-import React, { useEffect, useRef } from 'react';
-import { Network } from 'vis-network/standalone/esm/vis-network';
-import {DataSet} from "vis-network";
+import React, { useEffect, useRef } from "react";
+import { Network, Node, Edge } from "vis-network";
+import {DataSet} from "vis-data";
 
-const VisNetwork = ({ nodesData, edgesData }) => {
-    const containerRef = useRef(null);
-    const networkRef = useRef(null);
-
-    useEffect(() => {
-        const nodes = new DataSet(nodesData);
-        const edges = new DataSet(edgesData);
-
-        const data = {
-            nodes: nodes,
-            edges: edges
-        };
-
-        const options = {
-            nodes: {
-                shape: 'dot',
-                size: 16
-            },
-            physics: {
-                enabled: true
-            },
-            interaction: {
-                hover: true
-            }
-        };
-
-        if (containerRef.current) {
-            networkRef.current = new Network(containerRef.current, data, options);
-        }
-
-        return () => {
-            if (networkRef.current) {
-                networkRef.current.destroy();
-            }
-        };
-    }, [nodesData, edgesData]);
-
-    return <div ref={containerRef} style={{ height: '500px', border: '1px solid lightgray' }} />;
+type Props = {
+    nodes: DataSet<Node>;
+    edges: DataSet<Edge>;
+    options?: object;
+    style?: React.CSSProperties;
 };
 
-export default VisNetwork;
+export const VisNetwork: React.FC<Props> = ({ nodes, edges, options, style }) => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const networkRef = useRef<Network | null>(null);
+
+    useEffect(() => {
+        if (containerRef.current && !networkRef.current) {
+            networkRef.current = new Network(containerRef.current, { nodes, edges }, options);
+        }
+    }, []);
+
+    return <div ref={containerRef} style={style} />;
+};

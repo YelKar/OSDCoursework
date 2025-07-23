@@ -1,62 +1,81 @@
-import React, { useEffect, useRef } from 'react';
-import { DataSet } from 'vis-data';
-import { Network, Node, Edge, Options } from 'vis-network';
+import React, {useEffect, useRef} from "react";
+import { Network, Node, Edge } from "vis-network";
+import {DataSet} from "vis-data";
 
-export interface VisTreeProps {
-    nodes: Node[];
-    edges: Edge[];
-    options?: Options;
-    size?: {
-        width: number;
-        height: number;
-    };
-}
+type Props = {
+    nodes: DataSet<Node>;
+    edges: DataSet<Edge>;
+    options?: object;
+    style?: React.CSSProperties;
+    className?: string;
+    defaultScale?: number;
+};
 
-const VisTree: React.FC<VisTreeProps> = ({ nodes, edges, options, size }) => {
+const defaultOptions = {
+    nodes: {
+        widthConstraint: 30,
+        heightConstraint: 30,
+        font: {
+            size: 20,
+            face: 'Comfortaa',
+        }
+    },
+    edges: {
+        width: 5,
+        font: {
+            size: 45,
+            face: 'Comfortaa',
+        }
+    },
+    layout: {
+        hierarchical: {
+            enabled: true,
+            direction: 'UD',
+            sortMethod: 'directed',
+            nodeSpacing: 100,
+            treeSpacing: 100,
+            levelSeparation: 500,
+            shakeTowards: 'roots',
+            blockShifting: false,
+            edgeMinimization: false,
+            parentCentralization: false,
+        }
+    },
+};
+
+const VisTree: React.FC<Props> = ({ nodes, edges, options, style, className, defaultScale }) => {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const networkRef = useRef<Network | null>(null);
-
     useEffect(() => {
-        if (containerRef.current) {
-            const data = {
-                nodes: new DataSet<Node>(nodes),
-                edges: new DataSet<Edge>(edges),
-            };
-
-            const defaultOptions: Options = {
-                layout: {
-                    hierarchical: {
-                        enabled: true,
-                        direction: 'UD', // UD = top-down (или 'LR' для слева направо)
-                        sortMethod: 'directed',
-                        nodeSpacing: 100,
-                        treeSpacing: 200,
-                        levelSeparation: 150,
-                    },
-                },
-                physics: {
-                    enabled: false,
-                },
-                nodes: {
-                    shape: 'box',
-                },
-                ...options,
-            };
-
-            networkRef.current = new Network(containerRef.current, data, defaultOptions);
+        if (containerRef.current && !networkRef.current) {
+            networkRef.current = new Network(containerRef.current, { nodes, edges },  {...defaultOptions, ...options});
         }
+        networkRef.current?.moveTo({
+            scale: defaultScale,
+            animation: false,
+        })
+    }, []);
+    return <div ref={containerRef} style={style} className={className} />;
+};
 
-        return () => {
-            networkRef.current?.destroy();
-        };
-    }, [nodes, edges, options]);
+const addNode = (nodes: DataSet<Node>, id: number) => {
+    nodes.add({ id, label: `${id}` });
+};
 
-    return (
-        <div
-            ref={containerRef}
-            style={{ width: (size?.width ?? 800) + 'px', height: (size?.height ?? 600) + 'px', border: '1px solid #ccc', background: '#282c34' }}
-        />
-    );
+const addEdge = (edges: DataSet<Edge>, nodes: DataSet<Node>, from: number, to: number, label: string) => {
+    if (!nodes.get(from)) {
+        addNode(nodes, from);
+    }
+    if (!nodes.get(to)) {
+        addNode(nodes, to);
+    }
+    edges.get().forEach((edge) => {
+        if (edge.from === from && edge.to === to) {
+            edges.remove(edge);
+        }
+    });
+    edges.add({ from, to, label });
 };
 
 export default VisTree;
+export { addNode, addEdge };

@@ -26,6 +26,6 @@ declare module 'vis-data' {
         get(): T[];
         get(id: string | number): T;
         get(ids: Array<string | number>): T[];
-        // …допишите ещё методы, которые вам нужны
+        clear(): void;
     }
 }

@@ -1,6 +1,3 @@
-
-
-
 export default function parseExpression(expr: string): (x: number) => number {
     expr = expr.replace(/\s+/g, '');
 

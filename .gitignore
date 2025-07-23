@@ -21,3 +21,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.idea
+.idea/*
+my-react-router-app
+my-react-router-app/*

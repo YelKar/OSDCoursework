@@ -1,13 +1,56 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+:root {
+  --primary-color: #282c34;
+  --secondary-color: #68788c;
+  --text-color: #e3e7ff;
+  --accent-color: #2f6297;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+body {
+  margin: 0;
+  padding: 0;
+  color: var(--text-color);
+  background-color: var(--primary-color);
+  font-family: Comfortaa, sans-serif;
+  font-weight: 700;
+}
+input {
+  outline: none;
+  border: 3px solid var(--secondary-color);
+  border-radius: 10px;
+  padding: 10px 0 10px 20px;
+  font-family: Comfortaa, sans-serif;
+  font-weight: 700;
+  background-color: var(--primary-color);
+  color: var(--text-color);
+  box-sizing: border-box;
+}
+input:focus {
+  border-color: var(--accent-color);
+}
+
+button, .button {
+  outline: none;
+  border: 3px solid var(--secondary-color);
+  border-radius: 10px;
+  padding-block: 10px;
+  font-family: Comfortaa, sans-serif;
+  font-weight: 700;
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+  box-sizing: border-box;
+  cursor: pointer;
+  text-align: center;
+}
+
+button:hover, .button:hover {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+  opacity: 0.9;
+}
+
+button:active, .button:active {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
 }

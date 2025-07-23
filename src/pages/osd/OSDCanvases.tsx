@@ -1,18 +1,17 @@
-import {Page} from "../../../types";
 import React, {useEffect, useState} from "react";
 import {DataSet} from "vis-data";
 import {Edge, Node} from "vis-network";
-import styles from "../OSD.common.module.css";
-import Tree from "../Tree";
-import ApproximationMetricSpace from "./ApproximationMetricSpace";
-import {getCSSVariable} from "../../../utils/util";
-import "./Approximation.css"
-import {Point, PointsFromString, PointsToString} from "../algorithm/types";
-import useWatchedRef, {WatchedRef} from "../../../utils/useWatchRef";
-import {Options as ApproximationOptions} from "../algorithm/approximation";
-import ApproximationInfoBar from "./ApproximationInfoBar";
+import styles from "./OSD.common.module.css";
+import OSDTree from "./OSDTree";
+import OSDMetricSpace from "./OSDMetricSpace";
+import {getCSSVariable} from "../../utils/util";
+import "./OSD.css"
+import {MarkedPoint, Point, PointsFromString, PointsToString} from "./algorithm/types";
+import useWatchedRef, {WatchedRef} from "../../utils/useWatchRef";
+import {Options as ApproximationOptions} from "./algorithm/approximation";
+import OSDInfoBar from "./OSDInfoBar";
 
-export const addPoint = ([,points, setPoints]: WatchedRef<Point[]>, point: Point) => {
+export const addPoint = ([,points, setPoints]: WatchedRef<MarkedPoint[]>, point: MarkedPoint) => {
     setPoints([...points, point]);
 };
 
@@ -27,7 +26,7 @@ export type CanvasProps = {
     };
 };
 
-export default function Approximation({setTitle}: Page) {
+export default function OSDCanvases() {
     const [approximationOptions, setApproximationOptions] = useState<ApproximationOptions>({});
 
     const refs = {
@@ -46,10 +45,9 @@ export default function Approximation({setTitle}: Page) {
     };
 
     useEffect(() => {
-        setTitle("OSD — аппроксимация метрического пространства на HST-дереве");
         window.addEventListener('resize', handleResize);
-        if (localStorage.getItem("Approximation.points") !== null && localStorage.getItem("Approximation.points")?.trim() !== "") {
-            setPoints(PointsFromString(localStorage.getItem("Approximation.points") ?? ""));
+        if (localStorage.getItem("OSDCanvases.points") !== null && localStorage.getItem("OSDCanvases.points")?.trim() !== "") {
+            setPoints(PointsFromString(localStorage.getItem("OSDCanvases.points") ?? ""));
         }
         return () => {
             window.removeEventListener('resize', handleResize);
@@ -57,29 +55,19 @@ export default function Approximation({setTitle}: Page) {
     }, []);
 
     useEffect(() => {
-        localStorage.setItem("Approximation.points", PointsToString(points))
+        localStorage.setItem("OSDCanvases.points", PointsToString(points))
     }, [points]);
 
-    const leftBarWidth = 150;
+    const leftBarWidth = 250;
     const headerHeight = Number(getCSSVariable("--header-height").replace("px", ""));
     const canvasMargin = Number(getCSSVariable("--canvas-margin").replace("px", ""));
     const canvasWidth = (windowWidth - leftBarWidth) / 2 - canvasMargin * 2;
-    const canvasHeight = windowHeight - headerHeight - canvasMargin * 2;
+    const canvasHeight = (windowHeight - headerHeight) / 2 - canvasMargin * 2;
+    const leftBarHeight = windowHeight - headerHeight - canvasMargin * 2;
     return (
         <div>
             <div className={styles.canvases}>
-                <ApproximationInfoBar
-                    pos={{
-                        x: 0,
-                        y: canvasMargin + headerHeight,
-                    }}
-                    size={{
-                        width: leftBarWidth,
-                        height: canvasHeight,
-                    }}
-                    setApproximationOptions={setApproximationOptions}
-                />
-                <ApproximationMetricSpace
+                <OSDMetricSpace
                     pos={{
                         x: canvasMargin + leftBarWidth,
                         y: canvasMargin + headerHeight
@@ -90,7 +78,7 @@ export default function Approximation({setTitle}: Page) {
                     }}
                     approximationOptions={approximationOptions}
                 />
-                <Tree
+                <OSDTree
                     pos={{
                         x: canvasMargin * 2 + canvasWidth + leftBarWidth,
                         y: canvasMargin + headerHeight
@@ -99,6 +87,17 @@ export default function Approximation({setTitle}: Page) {
                         width: canvasWidth,
                         height: canvasHeight,
                     }}
+                />
+                <OSDInfoBar
+                    pos={{
+                        x: 0,
+                        y: canvasMargin + headerHeight,
+                    }}
+                    size={{
+                        width: leftBarWidth,
+                        height: leftBarHeight,
+                    }}
+                    setApproximationOptions={setApproximationOptions}
                 />
             </div>
         </div>

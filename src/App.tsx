@@ -1,26 +1,25 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import "./App.css"
+import {useState} from "react";
+import {BrowserRouter, Route, Routes} from "react-router-dom";
+import Tree from "./pages/tree/Tree";
+import Home from "./pages/home/Home";
+import {getCSSVariable} from "./utils/util";
+import OSD from "./pages/osd/OSD";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+export default function App() {
+    const [title, setTitle] = useState('');
+    return (
+        <div>
+            <h1 style={{
+                height: getCSSVariable('--header-height'),
+            }}>{title}</h1>
+            <BrowserRouter>
+                <Routes>
+                    <Route path="/" element={<Home setTitle={setTitle}/>}/>
+                    <Route path="/tree" element={<Tree setTitle={setTitle}/>} />
+                    <Route path="/osd" element={<OSD setTitle={setTitle}/>}/>
+                </Routes>
+            </BrowserRouter>
+        </div>
+    );
 }
-
-export default App;
