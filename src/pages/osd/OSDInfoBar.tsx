@@ -11,7 +11,7 @@ import parseExpression from "./algorithm/expressionParsing";
 import {MarkedPoint} from "./algorithm/types";
 import {WatchedRef} from "../../utils/useWatchRef";
 import Saturate, {IsSaturatedEdge} from "./algorithm/saturation";
-import {GetMajorEdge, GetPathBetweenPoints} from "./algorithm/service";
+import Service, {GetMajorEdge, GetPathBetweenPoints} from "./algorithm/service";
 
 type OSDInfoBarProps = CanvasProps & {
     setApproximationOptions: Dispatch<SetStateAction<ApproximationOptions>>;
@@ -48,23 +48,15 @@ export default function OSDInfoBar({
         }
     }, []);
     useEffect(() => {
-        let isCritical = false;
         const interval = setInterval(() => {
             if (isRunning) {
                 const updatedTree = treeRef.current;
-                Saturate(updatedTree, {start: lastSaturationTimeRef.current - startTime, end: Date.now() - startTime});
+                Saturate(updatedTree, Date.now() - lastSaturationTimeRef.current);
                 lastSaturationTimeRef.current = Date.now();
                 setTree({...updatedTree});
-                for (const point of pointsRef.current) {
-                    const majorEdge = GetMajorEdge(serverMovementRef.current[serverMovementRef.current.length - 1], point, treeRef.current.edges);
-                    if (!isCritical && majorEdge && IsSaturatedEdge(majorEdge)) {
-                        const path = GetPathBetweenPoints(serverMovementRef.current[serverMovementRef.current.length - 1], point, treeRef.current.edges);
-                        console.log("RESET", path)
-                        path.forEach(edge => {
-                            edge.value = 0;
-                        });
-                    }
-                }
+                if (Service(serverMovementRef.current[serverMovementRef.current.length - 1], pointsRef.current, treeRef.current)) {
+                    setIsRunning(false);
+                };
             }
         }, 100);
         return () => {
@@ -176,6 +168,14 @@ export default function OSDInfoBar({
                             setStartTime(-1);
                             setTree({...tree, edges: tree.edges.map(e => ({...e, value: 0}))});
                             timeRef.current?.reset();
+                            treeRef.current.edges.forEach(e => {
+                                e.value = 0;
+                            });
+                            treeRef.current.nodes.forEach(n => {
+                                if (n.point.expression) {
+                                    n.point.expression.lastX = 0;
+                                }
+                            });
                         }}
                     >
                         Сбросить
@@ -194,14 +194,15 @@ export default function OSDInfoBar({
                     Остановить
                 </button>
             </div>
-            <InfoBarPoints pointsRef={pointsWatchedRef} popupRef={popupRef} time={startTime !== -1 ? Date.now() - startTime : 0}/>
+            <InfoBarPoints pointsRef={pointsWatchedRef} popupRef={popupRef}/>
             <StringInputPopup ref={popupRef} onSubmit={(answer, id: number) => {
+                const nodeFunction = parseExpression(answer);
                 setPoints((oldPoints) => {
                     const points = [...oldPoints];
                     const point = points.find((p) => p.id === id);
                     if (point) {
                         point.expression = {
-                            function: parseExpression(answer),
+                            function: nodeFunction,
                             expression: answer,
                         };
                     }
@@ -212,7 +213,7 @@ export default function OSDInfoBar({
     );
 }
 
-function InfoBarPoints({pointsRef: [pointsRef,points,setPoints], popupRef, time}: {pointsRef: WatchedRef<MarkedPoint[]>, popupRef: React.RefObject<PopupRef<number|string>|null>, time: number}) {
+function InfoBarPoints({pointsRef: [pointsRef,points,setPoints], popupRef}: {pointsRef: WatchedRef<MarkedPoint[]>, popupRef: React.RefObject<PopupRef<number|string>|null>}) {
     return (
         <div className={styles.infoBarPointsContainer}>
             {pointsRef.current?.map((point) => (
@@ -227,7 +228,7 @@ function InfoBarPoints({pointsRef: [pointsRef,points,setPoints], popupRef, time}
                         e.preventDefault();
                     }}
                 >
-                    {point.id}. ({point.x}; {point.y}): {point.expression?.expression ?? "x"} = {formatNumber((point.expression?.function ?? (x => x))(time / 1000))}
+                    {point.id}. ({point.x}; {point.y}): {point.expression?.expression ?? "x"} {point.expression?.lastX === undefined} = {formatNumber((point.expression?.function ?? (x => x))(point.expression?.lastX ?? 0))}
                 </div>
             ))}
         </div>

@@ -66,6 +66,10 @@ function createNodeId(cluster: Cluster): string {
     return cluster.children.length > 0 && cluster.center.id !== "root" ? cluster.radius + ":" + cluster.points.map(p => p.id).toString() : cluster.center.id.toString();
 }
 
+function isLeaf(cluster: Cluster): boolean {
+    return cluster.children.length === 0;
+}
+
 function clustersToTree(clusters: Cluster[]): Pick<HSTTree, "edges" | "nodes"> {
     const nodes: HSTNode[] = [];
     const edges: HSTEdge[] = [];

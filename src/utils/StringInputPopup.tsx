@@ -16,13 +16,29 @@ function StringInputPopupInner<T>({ onSubmit }: Props<T>, ref: React.Ref<PopupRe
     const [isOpen, setIsOpen] = useState(false);
     const [input, setInput] = useState('');
     const [options, setOptions] = useState<T | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const handleOk = () => {
         if (options !== null) {
-            onSubmit(input, options);
+            try {
+                onSubmit(input, options);
+                setInput('');
+                setIsOpen(false);
+                setError(null);
+            } catch (e) {
+                if (e instanceof Error) {
+                    setError(e.message);
+                } else {
+                    setError("Неизвестная ошибка");
+                }
+            }
         }
-        setInput('');
+    };
+
+    const handleCancel = () => {
         setIsOpen(false);
+        setInput('');
+        setError(null);
     };
 
     useImperativeHandle(ref, () => ({
@@ -47,16 +63,17 @@ function StringInputPopupInner<T>({ onSubmit }: Props<T>, ref: React.Ref<PopupRe
                 backgroundColor: "var(--primary-color)",
                 padding: '20px',
                 borderRadius: '10px',
-                minWidth: '300px'
+                width: '350px'
             }}>
                 <h3>Введите строку</h3>
                 <input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    style={{ width: '100%', marginBottom: '10px' }}
+                    style={{ width: '100%' }}
                 />
+                <p style={{ color: 'red', height: '20px', fontSize: "12px", width: '100%' }}>{error ?? ""}</p>
                 <div style={{ textAlign: 'right' }}>
-                    <button onClick={() => setIsOpen(false)} style={{ marginRight: '10px' }}>Отмена</button>
+                    <button onClick={handleCancel} style={{ marginRight: '10px' }}>Отмена</button>
                     <button onClick={handleOk}>OK</button>
                 </div>
             </div>

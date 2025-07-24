@@ -11,17 +11,6 @@ export type MarkedPoint = Point & {
     id: number | string | "root";
 }
 
-export function PointsFromString(s: string): Point[] {
-    return s.trim().split(/\s+/).map(pair => {
-        const [xStr, yStr] = pair.split(',');
-        return { x: Number(xStr), y: Number(yStr) };
-    });
-}
-
-export function PointsToString(points: Point[]): string {
-    return points.map(p => `${p.x},${p.y}`).join(' ');
-}
-
 export type Cluster = {
     center: MarkedPoint;
     radius: number;
@@ -44,6 +33,7 @@ export type HSTEdge = {
 export type Expression = {
     function: (x: number) => number;
     expression: string;
+    lastX?: number;
 }
 
 export type HSTNode = {

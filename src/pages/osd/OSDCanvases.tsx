@@ -6,7 +6,7 @@ import OSDTree from "./OSDTree";
 import OSDMetricSpace from "./OSDMetricSpace";
 import {getCSSVariable} from "../../utils/util";
 import "./OSD.css"
-import {MarkedPoint, Point, PointsFromString, PointsToString} from "./algorithm/types";
+import {MarkedPoint, Point} from "./algorithm/types";
 import useWatchedRef, {WatchedRef} from "../../utils/useWatchRef";
 import {Options as ApproximationOptions} from "./algorithm/approximation";
 import OSDInfoBar from "./OSDInfoBar";
@@ -46,17 +46,11 @@ export default function OSDCanvases() {
 
     useEffect(() => {
         window.addEventListener('resize', handleResize);
-        if (localStorage.getItem("OSDCanvases.points") !== null && localStorage.getItem("OSDCanvases.points")?.trim() !== "") {
-            setPoints(PointsFromString(localStorage.getItem("OSDCanvases.points") ?? ""));
-        }
+
         return () => {
             window.removeEventListener('resize', handleResize);
         };
     }, []);
-
-    useEffect(() => {
-        localStorage.setItem("OSDCanvases.points", PointsToString(points))
-    }, [points]);
 
     const leftBarWidth = 250;
     const headerHeight = Number(getCSSVariable("--header-height").replace("px", ""));

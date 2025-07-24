@@ -2,7 +2,7 @@ import styles from "./OSD.common.module.css";
 import React, {useContext, useEffect} from "react";
 import {assertExists, getCSSVariable} from "../../utils/util";
 import {addPoint, CanvasProps} from "./OSDCanvases";
-import {Point} from "./algorithm/types";
+import {MarkedPoint, Point} from "./algorithm/types";
 import MetricApproximation, {DrawClusters, Options as ApproximationOptions} from "./algorithm/approximation";
 import {OSDContext} from "./OSD";
 
@@ -93,7 +93,15 @@ export default function OSDMetricSpace(
             <canvas
                 ref={canvasRef}
                 onClick={(e) => {
-                    const newPoint = {x: Math.round(e.nativeEvent.offsetX / scale), y: Math.round(e.nativeEvent.offsetY / scale), id: lastPointId + 1};
+                    const newPoint: MarkedPoint = {
+                        x: Math.round(e.nativeEvent.offsetX / scale),
+                        y: Math.round(e.nativeEvent.offsetY / scale),
+                        id: lastPointId + 1,
+                        expression: {
+                            function: x => x,
+                            expression: "x",
+                        }
+                    };
                     addPoint(pointsWatchedRef, newPoint);
                     setLastPointId(lastPointId + 1);
                 }}
@@ -110,7 +118,7 @@ export default function OSDMetricSpace(
                     setMousePosition({x: 0, y: 0});
                 }}
                 onWheel={(e) => {
-                    const newScale = scale + e.deltaY / scaleChangeCoef * scale;
+                    const newScale = scale - e.deltaY / scaleChangeCoef * scale;
                     if (newScale > 0.5)
                         setScale(newScale);
                     else

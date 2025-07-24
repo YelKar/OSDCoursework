@@ -1,22 +1,29 @@
 import {HSTEdge, HSTTree} from "./types";
 
-type DeltaTime = {
-    start: number;
-    end: number;
-}
-
-export default function Saturate(tree: HSTTree, deltaTime: DeltaTime, defaultFunction: (x: number) => number = (x => x)) {
+export default function Saturate(tree: HSTTree, deltaTime: number, defaultFunction: (x: number) => number = (x => x)) {
     if (tree.nodes.length < 2) {
         return;
     }
+    deltaTime /= 1000;
     const leafNodes = tree.nodes.filter(node => node.point.id.toString().indexOf(":") === -1 && node.point.id.toString() !== "root");
     for (const node of leafNodes) {
         const firstEdge = tree.edges.find(edge => edge.to.id === node.point.id);
         if (!firstEdge) {
             throw new Error(`Node ${node.point.id} has no edges`);
         }
+        if (!node.point.expression) {
+            node.point.expression = {
+                function: defaultFunction,
+                expression: `x`,
+                lastX: 0,
+            };
+        }
+        if (!node.point.expression.lastX) {
+            node.point.expression.lastX = 0;
+        }
         const nodeFunction = node.point.expression?.function ?? defaultFunction;
-        SaturateEdge(firstEdge, tree.edges,  nodeFunction(deltaTime.end / 1000) - nodeFunction(deltaTime.start / 1000));
+        SaturateEdge(firstEdge, tree.edges,  nodeFunction(deltaTime + node.point.expression.lastX) - nodeFunction(node.point.expression.lastX));
+        node.point.expression.lastX += deltaTime;
     }
 }
 function SaturateEdge(edge: HSTEdge, edges: HSTEdge[], delta: number) {
