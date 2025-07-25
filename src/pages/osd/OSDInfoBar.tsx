@@ -136,6 +136,7 @@ export default function OSDInfoBar({
                         });
                     }
                 }/>
+                <div>
                 <Checkbox style={{
                     margin: "5px",
                     marginLeft: "0px",
@@ -154,6 +155,7 @@ export default function OSDInfoBar({
                 }} title={"Единичное обслуживание"} defaultChecked onChange={e => {
                     setSingleServicing(e.target.checked);
                 }}/>
+                </div>
                 <div className={styles.infoBarItem}>
                     Диаметр: {metricInfo.diameter.toFixed(2)}
                 </div>

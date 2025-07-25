@@ -6,7 +6,7 @@ import {assertExists, getCSSVariable} from "../../utils/util";
 import {OSDContext} from "./OSD";
 import {DataSet} from "vis-data";
 import {Edge, Node} from "vis-network";
-import {HSTEdge, HSTNode, HSTTree} from "./algorithm/types";
+import {HSTEdge, HSTNode, HSTTree, MarkedPoint} from "./algorithm/types";
 
 
 export default function OSDTree(
@@ -15,12 +15,13 @@ export default function OSDTree(
     }: CanvasProps) {
     const {
         treeRef: [,tree,],
+        serverMovement: [,serverMovement,]
     } = assertExists(useContext(OSDContext));
     const nodesRef = React.useRef<DataSet<Node>>(new DataSet<Node>([]));
     const edgesRef = React.useRef<DataSet<Edge>>(new DataSet<Edge>([]));
 
     useEffect(() => {
-        convertTreeToVis(tree, nodesRef, edgesRef);
+        convertTreeToVis(tree, nodesRef, edgesRef, serverMovement[serverMovement.length - 1]);
     }, [tree]);
 
     return (
@@ -52,7 +53,7 @@ function getEdgeColor(edge: HSTEdge) {
     return (edge.value ?? 0) >= edge.length ? getCSSVariable("--accent-color") : getCSSVariable("--secondary-color");
 }
 
-function convertTreeToVis(tree: HSTTree, nodesRef: RefObject<DataSet<Node>>, edgesRef: RefObject<DataSet<Edge>>): void {
+function convertTreeToVis(tree: HSTTree, nodesRef: RefObject<DataSet<Node>>, edgesRef: RefObject<DataSet<Edge>>, server: MarkedPoint): void {
     const visEdges = edgesRef.current.get();
     const edges = [...tree.edges];
     for (const visEdge of visEdges) {
@@ -100,6 +101,10 @@ function convertTreeToVis(tree: HSTTree, nodesRef: RefObject<DataSet<Node>>, edg
         nodesRef.current.update({
             id: node.point.id,
             label: node.label.indexOf(":") === -1 && node.label !== "root" ? node.label : "",
+            color: node.point.id === server.id ? "red" : getCSSVariable("--accent-color"),
+            font: {
+                color: getCSSVariable("--text-color"),
+            }
         });
         nodes.splice(nodeIndex, 1);
     }
@@ -107,6 +112,10 @@ function convertTreeToVis(tree: HSTTree, nodesRef: RefObject<DataSet<Node>>, edg
         nodesRef.current.add({
             id: node.point.id,
             label: node.label.indexOf(":") === -1 && node.label !== "root" ? node.label : "",
+            color: node.point.id === server.id ? "red" : getCSSVariable("--accent-color"),
+            font: {
+                color: getCSSVariable("--text-color"),
+            }
         });
     }
 }
