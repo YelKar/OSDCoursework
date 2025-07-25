@@ -29,7 +29,7 @@ export default function OSD({setTitle}: Page) {
         isRunning: useState(false),
         startTime: useState(-1),
         lastPointId: useState(0),
-        serverMovement: useWatchedRef<MarkedPoint[]>([{x: 0, y: 0, id: "root"}]),
+        serverMovement: useWatchedRef<MarkedPoint[]>([{x: 0, y: 0, id: "root", state: "saturation"}]),
     };
     useEffect(() => {
         setTitle("OSD — Online Service with Delay");

@@ -2,7 +2,7 @@ import styles from "./OSD.common.module.css";
 import React, {useContext, useEffect} from "react";
 import {assertExists, getCSSVariable} from "../../utils/util";
 import {addPoint, CanvasProps} from "./OSDCanvases";
-import {MarkedPoint, Point} from "./algorithm/types";
+import {HSTEdge, MarkedPoint, Point} from "./algorithm/types";
 import MetricApproximation, {DrawClusters, Options as ApproximationOptions} from "./algorithm/approximation";
 import {OSDContext} from "./OSD";
 
@@ -65,6 +65,7 @@ export default function OSDMetricSpace(
         const context = canvas.getContext("2d");
         if (!context) return;
         context.clearRect(0, 0, canvas.width, canvas.height);
+        drawServerMovement(serverMovement, scale, context);
         pointsRef.current.forEach((point) => {
             context.fillStyle = getCSSVariable("--text-color");
             context.beginPath();
@@ -100,7 +101,8 @@ export default function OSDMetricSpace(
                         expression: {
                             function: x => x,
                             expression: "x",
-                        }
+                        },
+                        state: "saturation",
                     };
                     addPoint(pointsWatchedRef, newPoint);
                     setLastPointId(lastPointId + 1);
@@ -162,4 +164,16 @@ function drawMousePosition(context: CanvasRenderingContext2D, pos: Point, scale:
     context.beginPath();
     context.arc(pos.x * scale, pos.y * scale, pointRadius, 0, 2 * Math.PI);
     context.fill();
+}
+
+function drawServerMovement(serverMovement: MarkedPoint[], scale: number, context: CanvasRenderingContext2D) {
+    context.beginPath();
+    context.moveTo(serverMovement[0].x * scale, serverMovement[0].y * scale);
+    for (const pos of serverMovement.slice(1)) {
+        context.lineTo(pos.x * scale, pos.y * scale);
+    }
+    context.strokeStyle = "#f806";
+    context.lineWidth = 2;
+    context.stroke();
+    context.closePath();
 }

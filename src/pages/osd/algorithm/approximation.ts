@@ -43,6 +43,7 @@ export default function MetricApproximation(points: MarkedPoint[], options: Opti
             x: 0,
             y: 0,
             id: "root",
+            state: "saturation",
         },
         radius: metricDiameter,
         points: points,
@@ -81,7 +82,7 @@ function clustersToTree(clusters: Cluster[]): Pick<HSTTree, "edges" | "nodes"> {
                 ...cluster.center,
                 id: clusterId,
             },
-            label: clusterId
+            label: clusterId,
         });
         for (const child of cluster.children) {
             const childId = createNodeId(child);
@@ -95,6 +96,7 @@ function clustersToTree(clusters: Cluster[]): Pick<HSTTree, "edges" | "nodes"> {
                     id: childId,
                 },
                 length: child.radius,
+                state: "saturation"
             });
         }
         const {edges: childEdges, nodes: childNodes} = clustersToTree(cluster.children);

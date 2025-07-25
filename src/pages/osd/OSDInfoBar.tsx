@@ -8,14 +8,15 @@ import {OSDContext} from "./OSD";
 import Time, {TimeHandle} from "./Time";
 import {PopupRef, StringInputPopup} from "../../utils/StringInputPopup";
 import parseExpression from "./algorithm/expressionParsing";
-import {MarkedPoint} from "./algorithm/types";
+import {HSTEdge, MarkedPoint} from "./algorithm/types";
 import {WatchedRef} from "../../utils/useWatchRef";
 import Saturate, {IsSaturatedEdge} from "./algorithm/saturation";
-import Service, {GetMajorEdge, GetPathBetweenPoints} from "./algorithm/service";
+import Service, {GetMajorEdge, GetPathBetweenPoints, ServiceEdges, ServicingPath} from "./algorithm/service";
 
 type OSDInfoBarProps = CanvasProps & {
     setApproximationOptions: Dispatch<SetStateAction<ApproximationOptions>>;
 };
+
 
 export default function OSDInfoBar({
     pos, size,
@@ -27,12 +28,14 @@ export default function OSDInfoBar({
         isRunning: [isRunning, setIsRunning],
         startTime: [startTime, setStartTime],
         lastPointId:[,setLastPointId],
-        serverMovement: [serverMovementRef],
+        serverMovement: [serverMovementRef,,setServerMovement],
     } = assertExists(useContext(OSDContext));
     const [pointsRef,,setPoints] = pointsWatchedRef;
     const {metricInfo} = tree;
     const [stopTime, setStopTime] = useState(-1);
     const lastSaturationTimeRef = useRef<number>(-1);
+    const [edgesToService, setEdgesToService] = useState<ServicingPath | undefined>(undefined);
+    const [singleServicing, setSingleServicing] = useState<boolean>(true);
     useEffect(() => {
         if (localStorage.getItem("approximation.betaCoefficient") !== null) {
             setApproximationOptions(opt => {
@@ -54,8 +57,10 @@ export default function OSDInfoBar({
                 Saturate(updatedTree, Date.now() - lastSaturationTimeRef.current);
                 lastSaturationTimeRef.current = Date.now();
                 setTree({...updatedTree});
-                if (Service(serverMovementRef.current[serverMovementRef.current.length - 1], pointsRef.current, treeRef.current)) {
-                    setIsRunning(false);
+                const servicingResult = Service(serverMovementRef.current, pointsRef.current, treeRef.current);
+                if (servicingResult) {
+                    stop();
+                    setEdgesToService(servicingResult);
                 };
             }
         }, 100);
@@ -67,7 +72,40 @@ export default function OSDInfoBar({
     const timeRef = React.useRef<TimeHandle>(null);
     const popupRef = React.useRef<PopupRef<number|string>>(null);
 
+    const reset = () => {
+        setStartTime(-1);
+        setTree({...tree, edges: tree.edges.map(e => ({...e, value: 0}))});
+        timeRef.current?.reset();
+        treeRef.current.edges.forEach(e => {
+            delete e.value;
+        });
+        treeRef.current.nodes.forEach(n => {
+            if (n.point.expression) {
+                n.point.expression.lastX = 0;
+                n.point.state = "saturation";
+            }
+        });
+        pointsRef.current.forEach(p => {
+            p.state = "saturation";
+        })
+        setServerMovement([serverMovementRef.current[0]]);
+    }
 
+    const start = () => {
+        setIsRunning(true);
+        if (startTime === -1) {
+            setStartTime(Date.now());
+            lastSaturationTimeRef.current = Date.now();
+        } else {
+            setStartTime(Date.now() - (stopTime - startTime));
+            lastSaturationTimeRef.current = Date.now() - (stopTime - lastSaturationTimeRef.current);
+        }
+    }
+
+    const stop = () => {
+        setIsRunning(false);
+        setStopTime(Date.now());
+    };
 
     return (
         <div className={`${styles.canvas} ${styles.infoBar}`} style={{
@@ -110,6 +148,12 @@ export default function OSDInfoBar({
                         }
                     });
                 }}/>
+                <Checkbox style={{
+                    margin: "5px",
+                    marginLeft: "0px",
+                }} title={"Единичное обслуживание"} defaultChecked onChange={e => {
+                    setSingleServicing(e.target.checked);
+                }}/>
                 <div className={styles.infoBarItem}>
                     Диаметр: {metricInfo.diameter.toFixed(2)}
                 </div>
@@ -131,6 +175,8 @@ export default function OSDInfoBar({
                     setStartTime(-1);
                     timeRef.current?.reset();
                     setLastPointId(0);
+                    setEdgesToService(undefined);
+                    setServerMovement([serverMovementRef.current[0]]);
                 }}>
                     Очистить
                 </button>
@@ -140,22 +186,13 @@ export default function OSDInfoBar({
                     gap: "5px",
                 }}>
                     <button
-                        hidden={isRunning}
+                        hidden={isRunning || edgesToService !== undefined}
                         style={{
                             backgroundColor: getCSSVariable("--accent-color"),
                             borderColor: getCSSVariable("--accent-color"),
                             flexGrow: 1,
                         }}
-                        onClick={() => {
-                            setIsRunning(true);
-                            if (startTime === -1) {
-                                setStartTime(Date.now());
-                                lastSaturationTimeRef.current = Date.now();
-                            } else {
-                                setStartTime(Date.now() - (stopTime - startTime));
-                                lastSaturationTimeRef.current = Date.now() - (stopTime - lastSaturationTimeRef.current);
-                            }
-                        }}
+                        onClick={start}
                     >
                         Запустить
                     </button>
@@ -163,20 +200,8 @@ export default function OSDInfoBar({
                         style={{
                             flexGrow: 1,
                         }}
-                        hidden={isRunning}
-                        onClick={() => {
-                            setStartTime(-1);
-                            setTree({...tree, edges: tree.edges.map(e => ({...e, value: 0}))});
-                            timeRef.current?.reset();
-                            treeRef.current.edges.forEach(e => {
-                                e.value = 0;
-                            });
-                            treeRef.current.nodes.forEach(n => {
-                                if (n.point.expression) {
-                                    n.point.expression.lastX = 0;
-                                }
-                            });
-                        }}
+                        hidden={isRunning || edgesToService !== undefined}
+                        onClick={reset}
                     >
                         Сбросить
                     </button>
@@ -186,12 +211,25 @@ export default function OSDInfoBar({
                     style={{
                         backgroundColor: getCSSVariable("--accent-color"),
                         borderColor: getCSSVariable("--accent-color"),
-                    }} onClick={() => {
-                    setIsRunning(false);
-                    setStopTime(Date.now());
-                }}
+                    }} onClick={stop}
                 >
                     Остановить
+                </button>
+                <button
+                    hidden={edgesToService === undefined}
+                    style={{
+                        backgroundColor: getCSSVariable("--accent-color"),
+                        borderColor: getCSSVariable("--accent-color"),
+                    }} onClick={() => {
+                        if (edgesToService) {
+                            ServiceEdges(serverMovementRef.current, edgesToService, treeRef.current.nodes, pointsRef.current, singleServicing);
+                            setEdgesToService(undefined);
+                            start();
+                            setServerMovement([...serverMovementRef.current]);
+                        }
+                    }}
+                >
+                    Обслужить
                 </button>
             </div>
             <InfoBarPoints pointsRef={pointsWatchedRef} popupRef={popupRef}/>

@@ -9,6 +9,7 @@ export type Point = Pos & {
 
 export type MarkedPoint = Point & {
     id: number | string | "root";
+    state: "saturation" | "serviced";
 }
 
 export type Cluster = {
@@ -28,6 +29,7 @@ export type HSTEdge = {
     to: MarkedPoint;
     length: number;
     value?: number;
+    state: "saturation" | "servicing";
 };
 
 export type Expression = {

@@ -56,7 +56,7 @@ export default function OSDCanvases() {
     const headerHeight = Number(getCSSVariable("--header-height").replace("px", ""));
     const canvasMargin = Number(getCSSVariable("--canvas-margin").replace("px", ""));
     const canvasWidth = (windowWidth - leftBarWidth) / 2 - canvasMargin * 2;
-    const canvasHeight = (windowHeight - headerHeight) / 2 - canvasMargin * 2;
+    const canvasHeight = (windowHeight - headerHeight) - canvasMargin * 2;
     const leftBarHeight = windowHeight - headerHeight - canvasMargin * 2;
     return (
         <div>

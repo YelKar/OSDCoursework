@@ -39,30 +39,6 @@ export default function OSDTree(
     )
 }
 
-// function convertTreeToVis(tree: HSTTree, nodesRef: RefObject<DataSet<Node>>, edgesRef: RefObject<DataSet<Edge>>): void {
-//     const getNodeNumberByPos = (pos: MarkedPoint) => {
-//         return tree.nodes.findIndex((p) => p.point.id === pos.id);
-//     };
-//     nodesRef.current.clear();
-//     edgesRef.current.clear();
-//     for (const edge of tree.edges) {
-//         if (!nodesRef.current.get(getNodeNumberByPos(edge.from))) {
-//             const label = tree.nodes[getNodeNumberByPos(edge.from)].label.indexOf(":") === -1 ? tree.nodes[getNodeNumberByPos(edge.from)].label : "";
-//             nodesRef.current.add({id: getNodeNumberByPos(edge.from), label});
-//         }
-//         if (!nodesRef.current.get(getNodeNumberByPos(edge.to))) {
-//             const label = tree.nodes[getNodeNumberByPos(edge.to)].label.indexOf(":") === -1 ? tree.nodes[getNodeNumberByPos(edge.to)].label : "";
-//             nodesRef.current.add({id: getNodeNumberByPos(edge.to), label});
-//         }
-//         edgesRef.current.add({
-//             from: getNodeNumberByPos(edge.from),
-//             to: getNodeNumberByPos(edge.to),
-//             length: edge.length,
-//             label: edge.value?.toFixed(2),
-//         });
-//     }
-// }
-
 function getEdgeIndexByNodeIds(edges: HSTEdge[], from: number | string, to: number | string) {
     return edges.findIndex((e) => e.from.id === from && e.to.id === to);
 }
@@ -70,6 +46,9 @@ function getNodeIndexById(nodes: HSTNode[], id: number | string) {
     return nodes.findIndex((n) => n.point.id === id);
 }
 function getEdgeColor(edge: HSTEdge) {
+    if (edge.state === "servicing") {
+        return "#f50";
+    }
     return (edge.value ?? 0) >= edge.length ? getCSSVariable("--accent-color") : getCSSVariable("--secondary-color");
 }
 
@@ -91,7 +70,7 @@ function convertTreeToVis(tree: HSTTree, nodesRef: RefObject<DataSet<Node>>, edg
             from: edge.from.id,
             to: edge.to.id,
             length: edge.length,
-            label: edge.value?.toFixed(1),
+            label: edge.value?.toFixed(1) ?? " ",
             color: getEdgeColor(edge),
         })
         edges.splice(edgeIndex, 1);
@@ -102,7 +81,7 @@ function convertTreeToVis(tree: HSTTree, nodesRef: RefObject<DataSet<Node>>, edg
             from: edge.from.id,
             to: edge.to.id,
             length: edge.length,
-            label: edge.value?.toFixed(1),
+            label: edge.value?.toFixed(1) ?? " ",
             color: getEdgeColor(edge),
         });
     }

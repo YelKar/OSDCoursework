@@ -1,11 +1,11 @@
 import {HSTEdge, HSTTree} from "./types";
 
-export default function Saturate(tree: HSTTree, deltaTime: number, defaultFunction: (x: number) => number = (x => x)) {
+export default function Saturate(tree: Pick<HSTTree, "edges" | "nodes">, deltaTime: number, defaultFunction: (x: number) => number = (x => x)) {
     if (tree.nodes.length < 2) {
         return;
     }
     deltaTime /= 1000;
-    const leafNodes = tree.nodes.filter(node => node.point.id.toString().indexOf(":") === -1 && node.point.id.toString() !== "root");
+    const leafNodes = tree.nodes.filter(node => node.point.id.toString().indexOf(":") === -1 && node.point.id.toString() !== "root" && node.point.state !== "serviced");
     for (const node of leafNodes) {
         const firstEdge = tree.edges.find(edge => edge.to.id === node.point.id);
         if (!firstEdge) {

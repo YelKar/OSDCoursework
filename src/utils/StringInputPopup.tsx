@@ -1,6 +1,8 @@
+import { trace } from 'console';
 import React, {
     forwardRef,
     useImperativeHandle,
+    useRef,
     useState,
 } from 'react';
 
@@ -17,6 +19,7 @@ function StringInputPopupInner<T>({ onSubmit }: Props<T>, ref: React.Ref<PopupRe
     const [input, setInput] = useState('');
     const [options, setOptions] = useState<T | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const handleOk = () => {
         if (options !== null) {
@@ -46,6 +49,11 @@ function StringInputPopupInner<T>({ onSubmit }: Props<T>, ref: React.Ref<PopupRe
             setOptions(optionsArg);
             setInput(defaultValue ?? "");
             setIsOpen(true);
+            setTimeout(() => {
+                if (inputRef.current) {
+                    inputRef.current.focus();
+                }
+            });
         }
     }));
 
@@ -67,6 +75,7 @@ function StringInputPopupInner<T>({ onSubmit }: Props<T>, ref: React.Ref<PopupRe
             }}>
                 <h3>Введите строку</h3>
                 <input
+                    ref={inputRef}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     style={{ width: '100%' }}
